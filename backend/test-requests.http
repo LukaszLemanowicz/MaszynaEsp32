@@ -1,0 +1,44 @@
+### Test połączenia
+GET http://localhost:3000/api/test
+
+### Pobierz dane z ESP32 (temperatura)
+GET http://localhost:3000/api/data
+
+### Pobierz aktualną moc
+GET http://localhost:3000/api/power
+
+### Ustaw moc na 150W
+POST http://localhost:3000/api/power
+Content-Type: application/json
+
+{
+  "power": 150.0
+}
+
+### Ustaw moc na 300W
+POST http://localhost:3000/api/power
+Content-Type: application/json
+
+{
+  "power": 300.0
+}
+
+### Ustaw moc na 0W (wyłącz)
+POST http://localhost:3000/api/power
+Content-Type: application/json
+
+{
+  "power": 0.0
+}
+
+### Symuluj dane z ESP32 (temperatura)
+POST http://localhost:3000/api/esp32/data
+Content-Type: application/json
+
+{
+  "temperature": 25.5,
+  "status": "online"
+}
+
+### Pobierz moc dla ESP32 (endpoint używany przez ESP32)
+GET http://localhost:3000/api/esp32/power
