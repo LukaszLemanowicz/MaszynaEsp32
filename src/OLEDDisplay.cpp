@@ -203,34 +203,51 @@ void OLEDDisplay::showWiFiStatus(bool connected, const char* ip) {
     displayText();
 }
 
-void OLEDDisplay::showSystemInfo(float temp, float power, const String& wifiStatus, const String& dataStatus, const String& powerStatus, const String& lastError) {
+void OLEDDisplay::showSystemInfo(float temp1, float temp2, float power, const String& wifiStatus, const String& dataStatus, const String& powerStatus, const String& lastError) {
     clear();
     setTextSize(1);
     setTextColor(SSD1306_WHITE);
     
-    // Górna linia - temperatura i moc
+    // Górna linia - temperatury
     setCursor(0, 0);
-    print("T:");
-    print(temp, 1);
-    print("C  P:");
+    print("T1:");
+    if (temp1 == -999.0) {
+        print("ERR");
+    } else {
+        print(temp1, 1);
+        print("C");
+    }
+    
+    setCursor(64, 0);
+    print("T2:");
+    if (temp2 == -999.0) {
+        print("ERR");
+    } else {
+        print(temp2, 1);
+        print("C");
+    }
+    
+    // Druga linia - moc
+    setCursor(0, 12);
+    print("P:");
     print(power, 0);
     print("W");
     
-    // Druga linia - status WiFi
-    setCursor(0, 12);
+    // Trzecia linia - status WiFi
+    setCursor(0, 24);
     print("WiFi: ");
     print(wifiStatus.c_str());
     
-    // Trzecia linia - status danych i mocy
-    setCursor(0, 24);
+    // Czwarta linia - status danych i mocy
+    setCursor(0, 36);
     print("D:");
     print(dataStatus.c_str());
     print(" M:");
     print(powerStatus.c_str());
     
-    // Dolna linia - błąd (jeśli jest)
+    // Piąta linia - błąd (jeśli jest)
     if (lastError.length() > 0) {
-        setCursor(0, 36);
+        setCursor(0, 48);
         print("ERR: ");
         print(lastError.c_str());
     }
