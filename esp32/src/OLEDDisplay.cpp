@@ -203,53 +203,85 @@ void OLEDDisplay::showWiFiStatus(bool connected, const char* ip) {
     displayText();
 }
 
-void OLEDDisplay::showSystemInfo(float temp1, float temp2, float power, const String& wifiStatus, const String& dataStatus, const String& powerStatus, const String& lastError) {
+void OLEDDisplay::showSystemInfo(float temp1, float temp2, float temp3, bool powerState, float servoValue, const String& wifiStatus, const String& dataStatus, const String& commandStatus, const String& lastCommand, const String& lastError) {
     clear();
     setTextSize(1);
     setTextColor(SSD1306_WHITE);
     
-    // Górna linia - temperatury
+    // Górna linia - temperatury (skrócone do 2 linii)
     setCursor(0, 0);
     print("T1:");
     if (temp1 == -999.0) {
         print("ERR");
     } else {
         print(temp1, 1);
-        print("C");
     }
     
-    setCursor(64, 0);
+    setCursor(40, 0);
     print("T2:");
     if (temp2 == -999.0) {
         print("ERR");
     } else {
         print(temp2, 1);
-        print("C");
     }
     
-    // Druga linia - moc
+    setCursor(80, 0);
+    print("T3:");
+    if (temp3 == -999.0) {
+        print("ERR");
+    } else {
+        print(temp3, 1);
+    }
+    
+    // Druga linia - stan maszyny
     setCursor(0, 12);
     print("P:");
-    print(power, 0);
-    print("W");
+    print(powerState ? "ON " : "OFF");
+    print(" S:");
+    print(servoValue, 0);
+    print("%");
     
-    // Trzecia linia - status WiFi
+    // Trzecia linia - status WiFi (skrócony)
     setCursor(0, 24);
-    print("WiFi: ");
-    print(wifiStatus.c_str());
+    if (wifiStatus.length() > 12) {
+        // Skróć IP jeśli za długie
+        print(wifiStatus.substring(0, 12).c_str());
+    } else {
+        print("WiFi: ");
+        print(wifiStatus.c_str());
+    }
     
-    // Czwarta linia - status danych i mocy
+    // Czwarta linia - status danych i komend
     setCursor(0, 36);
     print("D:");
-    print(dataStatus.c_str());
-    print(" M:");
-    print(powerStatus.c_str());
+    if (dataStatus.length() > 8) {
+        print(dataStatus.substring(0, 8).c_str());
+    } else {
+        print(dataStatus.c_str());
+    }
+    print(" C:");
+    if (commandStatus.length() > 6) {
+        print(commandStatus.substring(0, 6).c_str());
+    } else {
+        print(commandStatus.c_str());
+    }
     
-    // Piąta linia - błąd (jeśli jest)
-    if (lastError.length() > 0) {
+    // Piąta linia - ostatnia komenda lub błąd
+    if (lastCommand.length() > 0) {
+        setCursor(0, 48);
+        if (lastCommand.length() > 20) {
+            print(lastCommand.substring(0, 20).c_str());
+        } else {
+            print(lastCommand.c_str());
+        }
+    } else if (lastError.length() > 0) {
         setCursor(0, 48);
         print("ERR: ");
-        print(lastError.c_str());
+        if (lastError.length() > 15) {
+            print(lastError.substring(0, 15).c_str());
+        } else {
+            print(lastError.c_str());
+        }
     }
     
     displayText();

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { DeviceStateService } from '../../core/services/device-state.service';
@@ -145,7 +145,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private deviceStateService: DeviceStateService,
-    private commandService: CommandService
+    private commandService: CommandService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -160,11 +161,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (state) => {
           this.deviceState = state;
           this.loading = false;
+          this.cdr.markForCheck(); // Wymuś aktualizację widoku przy OnPush
         },
         error: (error) => {
           console.error('Błąd pobierania stanu urządzenia:', error);
           this.errorBannerMessage = 'Błąd połączenia z serwerem. Sprawdź połączenie internetowe.';
           this.loading = false;
+          this.cdr.markForCheck();
         },
       });
 
@@ -176,10 +179,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (state) => {
           this.deviceState = state;
           this.loading = false;
+          this.cdr.markForCheck(); // Wymuś aktualizację widoku przy OnPush
         },
         error: (error) => {
           console.error('Błąd pobierania początkowego stanu:', error);
           this.loading = false;
+          this.cdr.markForCheck();
         },
       });
   }
@@ -221,13 +226,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (command && command.acknowledged) {
             this.powerState = isOn;
             this.powerFeedbackState = 'success';
+            this.cdr.markForCheck();
             // Reset feedback state po 5 sekundach
             setTimeout(() => {
               this.powerFeedbackState = 'idle';
+              this.cdr.markForCheck();
             }, 5000);
           } else {
             this.powerFeedbackState = 'error';
             this.powerErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie.';
+            this.cdr.markForCheck();
           }
         },
         error: (error) => {
@@ -240,6 +248,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             this.powerErrorMessage = 'Nie udało się wysłać komendy. Spróbuj ponownie.';
           }
+          this.cdr.markForCheck();
         },
       });
   }
@@ -261,13 +270,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.servoLoading = false;
           if (command && command.acknowledged) {
             this.servoFeedbackState = 'success';
+            this.cdr.markForCheck();
             // Reset feedback state po 5 sekundach
             setTimeout(() => {
               this.servoFeedbackState = 'idle';
+              this.cdr.markForCheck();
             }, 5000);
           } else {
             this.servoFeedbackState = 'error';
             this.servoErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie.';
+            this.cdr.markForCheck();
           }
         },
         error: (error) => {
@@ -280,6 +292,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             this.servoErrorMessage = 'Nie udało się wysłać komendy. Spróbuj ponownie.';
           }
+          this.cdr.markForCheck();
         },
       });
   }

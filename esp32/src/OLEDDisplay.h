@@ -50,7 +50,7 @@ public:
     
     // Metody do debugowania i informacji
     void showWiFiStatus(bool connected, const char* ip = nullptr);
-    void showSystemInfo(float temp1, float temp2, float power, const String& wifiStatus, const String& dataStatus, const String& powerStatus, const String& lastError);
+    void showSystemInfo(float temp1, float temp2, float temp3, bool powerState, float servoValue, const String& wifiStatus, const String& dataStatus, const String& commandStatus, const String& lastCommand, const String& lastError);
     void showDebugInfo(const char* line1, const char* line2 = nullptr, const char* line3 = nullptr);
     void showConnectionAttempt(int attempt, int maxAttempts);
 };
