@@ -138,3 +138,6 @@ dist/
 out/
 .nuxt/
 .vuepress/dist/
+
+# Angular cache
+.angular/cache/

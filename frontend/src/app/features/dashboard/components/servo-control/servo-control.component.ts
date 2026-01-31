@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -23,9 +23,8 @@ import { InputComponent } from '../../../../shared/components/input/input.compon
               max="100"
               step="1"
               formControlName="value"
-              [disabled]="disabled || loading"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              [class.slider-primary]="!disabled"
+              [class.slider-primary]="!disabled && !loading"
             />
             <div class="flex justify-between text-xs text-gray-500 mt-1">
               <span>0%</span>
@@ -81,7 +80,7 @@ import { InputComponent } from '../../../../shared/components/input/input.compon
     `,
   ],
 })
-export class ServoControlComponent {
+export class ServoControlComponent implements OnChanges {
   @Input() disabled = false;
   @Input() loading = false;
   @Output() valueChange = new EventEmitter<number>();
@@ -99,6 +98,21 @@ export class ServoControlComponent {
         ],
       ],
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Aktualizuj stan disabled kontrolki formularza zamiast używać atrybutu [disabled]
+    if (changes['disabled'] || changes['loading']) {
+      const shouldDisable = this.disabled || this.loading;
+      const valueControl = this.servoForm.get('value');
+      if (valueControl) {
+        if (shouldDisable) {
+          valueControl.disable();
+        } else {
+          valueControl.enable();
+        }
+      }
+    }
   }
 
   onSubmit(): void {
