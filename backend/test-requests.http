@@ -1,3 +1,41 @@
+### ============================================
+### ENDPOINTY AUTORYZACJI
+### ============================================
+
+### Rejestracja nowego użytkownika
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "operator1",
+  "password": "haslo123",
+  "deviceId": "ESP32_001"
+}
+
+### Logowanie użytkownika
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "operator1",
+  "password": "haslo123"
+}
+
+### Pobranie danych aktualnie zalogowanego użytkownika
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer <wklej_token_z_logowania>
+
+### Wylogowanie użytkownika
+POST http://localhost:3000/api/auth/logout
+Authorization: Bearer <wklej_token_z_logowania>
+Content-Type: application/json
+
+{}
+
+### ============================================
+### ENDPOINTY TESTOWE
+### ============================================
+
 ### Test połączenia
 GET http://localhost:3000/api/test
 

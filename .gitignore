@@ -122,6 +122,13 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+backend/database/app.db
+backend/database/*.db
+
 # ============================================
 # Build directories (Frontend & Backend)
 # ============================================

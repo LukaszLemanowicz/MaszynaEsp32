@@ -4,15 +4,101 @@ Backend Node.js do komunikacji z systemem maszyny ESP32 przez REST API.
 
 ## 🚀 Uruchomienie
 
+Zobacz szczegółową instrukcję w pliku [INSTALLATION.md](./INSTALLATION.md).
+
+**Szybki start:**
 ```bash
 cd backend
 npm install
+# Baza danych SQLite jest tworzona automatycznie (zobacz INSTALLATION_SQLITE.md)
+# Utwórz plik .env z konfiguracją
 npm start
 ```
 
 Serwer będzie dostępny pod adresem: `http://localhost:3000`
 
 ## 📡 API Endpoints
+
+### Autoryzacja
+
+#### `POST /api/auth/register`
+Rejestracja nowego użytkownika.
+
+**Request Body:**
+```json
+{
+  "username": "operator1",
+  "password": "haslo123",
+  "deviceId": "ESP32_001"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Użytkownik zarejestrowany pomyślnie",
+  "user": {
+    "id": 1,
+    "username": "operator1",
+    "deviceId": "ESP32_001",
+    "createdAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+#### `POST /api/auth/login`
+Logowanie użytkownika.
+
+**Request Body:**
+```json
+{
+  "username": "operator1",
+  "password": "haslo123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "token": "uuid-token-here",
+  "expiresAt": "2024-01-02T12:00:00.000Z",
+  "user": {
+    "id": 1,
+    "username": "operator1",
+    "deviceId": "ESP32_001"
+  }
+}
+```
+
+#### `POST /api/auth/logout`
+Wylogowanie użytkownika (wymaga autoryzacji).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+#### `GET /api/auth/me`
+Pobranie danych aktualnie zalogowanego użytkownika (wymaga autoryzacji).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "username": "operator1",
+  "deviceId": "ESP32_001",
+  "createdAt": "2024-01-01T12:00:00.000Z"
+}
+```
+
+### Dane z ESP32
 
 ### Dane z ESP32
 

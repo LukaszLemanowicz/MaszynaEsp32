@@ -119,7 +119,7 @@ ESP32 → Backend → Frontend
 **Status**: Frontend nie jest jeszcze zaimplementowany - patrz `frontend/README.md`
 
 ### Baza danych (planowane)
-- **DBMS**: PostgreSQL
+- **DBMS**: SQLite
 - **Model**: Tylko aktualny stan (brak historii w MVP)
 - **Tabele**: Użytkownicy powiązani z `deviceId`, aktualne odczyty
 
@@ -445,7 +445,7 @@ frontend/
 
 ### Priorytety implementacji
 1. **Frontend** - Najważniejszy brakujący komponent (Angular + TypeScript)
-2. **Baza danych** - PostgreSQL z modelem użytkowników i aktualnych odczytów
+2. **Baza danych** - SQLite z modelem użytkowników i aktualnych odczytów
 3. **Autoryzacja** - System logowania/rejestracji w backendzie
 4. **API endpoints** - Doprecyzowanie formatu komend i ACK
 

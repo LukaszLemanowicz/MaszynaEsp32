@@ -6,7 +6,7 @@ Określono użytkownika docelowego: pojedyncza rola operatora.
 Zatwierdzono zakres funkcji MVP: rejestracja/logowanie, podgląd 3 temperatur, status online/offline, sterowanie ON/OFF i serwem, ACK „OK” z ESP32, blokada sterowania offline, czas ostatniej aktualizacji.
 Zdefiniowano zakres poza MVP: historia odczytów, alarmy, multi‑device/multi‑user, zaawansowane bezpieczeństwo i skalowanie.
 Ustalono UI/UX: minimalistyczny, estetyczny, mobile‑first, jeden ekran główny.
-Wybrano technologie: Angular + TypeScript (FE), Node.js (BE), PostgreSQL (DB).
+Wybrano technologie: Angular + TypeScript (FE), Node.js (BE), SQLite (DB).
 Ustalono architekturę: trzy projekty (esp/, fe/, backend/), FE+BE na jednym serwerze, ESP32 z prostym API.
 Określono model danych: brak historii, DB przechowuje użytkowników i deviceId, ESP32 ma zahardcodowane ID.
 Ustalono komunikację: FE polling co 5 s, ESP32 cyklicznie wysyła dane, BE zwraca stan.
@@ -46,7 +46,7 @@ Odczyty temperatur odświeżają się co 5 s (weryfikacja interwału w UI).
 Sterowanie ON/OFF i serwem działa z ACK „OK” (weryfikacja odpowiedzi ESP32).
 System stabilny podczas demo (brak awarii i blokad interfejsu).
 Założenia techniczne i organizacyjne:
-Frontend: Angular + TypeScript; Backend: Node.js; DB: PostgreSQL.
+Frontend: Angular + TypeScript; Backend: Node.js; DB: SQLite.
 Trzy projekty: esp/, fe/, backend/; FE+BE na jednym serwerze.
 Model danych przechowuje wyłącznie aktualny stan; użytkownicy powiązani z deviceId.
 ESP32 komunikuje się prostym API i ma zahardcodowane ID.

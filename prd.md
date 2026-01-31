@@ -5,7 +5,7 @@ Aplikacja umożliwia zdalny podgląd stanu maszyny przemysłowej oraz podstawowe
 Zakres techniczny MVP:
 - Frontend: Angular + TypeScript.
 - Backend: Node.js.
-- Baza danych: PostgreSQL.
+- Baza danych: SQLite.
 - Struktura repozytorium: `esp32/`, `frontend/`, `backend/`.
 - Hosting: lokalne demo; docelowo publiczny serwer. Frontend i backend na jednym serwerze.
 
