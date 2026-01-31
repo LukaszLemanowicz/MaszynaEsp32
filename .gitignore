@@ -1,4 +1,6 @@
-# PlatformIO
+# ============================================
+# PlatformIO / ESP32
+# ============================================
 .pio
 .pioenvs
 .piolibdeps
@@ -69,11 +71,15 @@ dkms.conf
 ehthumbs.db
 Thumbs.db
 
-# Node.js (for backend)
+# ============================================
+# Node.js (Backend & Frontend)
+# ============================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+yarn.lock
 
 # Environment variables
 .env
@@ -116,6 +122,12 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-# Build directories
+# ============================================
+# Build directories (Frontend & Backend)
+# ============================================
 build/
 dist/
+.next/
+out/
+.nuxt/
+.vuepress/dist/

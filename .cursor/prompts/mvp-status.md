@@ -1,0 +1,3 @@
+# MVP Status Check
+
+check status of my project. use 10x-mvp-tracker from mcp tool. use light, fast and cheap model
