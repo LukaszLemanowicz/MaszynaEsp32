@@ -139,7 +139,7 @@ bool OLEDDisplay::isReady() const {
     return isInitialized;
 }
 
-// Metody do wyświetlania informacji o destylatorze
+// Metody do wyświetlania informacji o maszynie
 void OLEDDisplay::showWelcomeMessage() {
     if (!isInitialized) return;
     
@@ -147,7 +147,7 @@ void OLEDDisplay::showWelcomeMessage() {
     setTextSize(2);
     setTextColor(SSD1306_WHITE);
     setCursor(5, 20);
-    print("DESTYLATOR");
+    print("Maszyna");
     setTextSize(1);
     setCursor(35, 45);
     print("ESP32 v1.0");

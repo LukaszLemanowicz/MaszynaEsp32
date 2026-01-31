@@ -82,7 +82,7 @@ app.get('/api/test', (req, res) => {
 // Strona główna z informacjami
 app.get('/', (req, res) => {
   res.json({
-    message: 'Destylator ESP32 - Backend API',
+    message: 'Mazyna ESP32 - Backend API',
     version: '2.0.0',
     endpoints: {
       'GET /api/data': 'Pobierz dane z ESP32 (temperatura)',

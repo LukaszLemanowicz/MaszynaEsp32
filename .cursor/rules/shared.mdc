@@ -1,0 +1,54 @@
+# Wspólne reguły projektu
+
+## Język i dokumentacja
+- Wszystkie komentarze w kodzie i dokumentacja są w języku polskim
+- Nazwy zmiennych, funkcji, klas - w języku angielskim
+- Komentarze wyjaśniają "dlaczego", nie "co" (kod powinien być samodokumentujący)
+
+## Git i commity
+- Monorepo - wszystkie podprojekty w jednym repozytorium
+- Komunikaty commitów po polsku, opisowe
+- Główna gałąź: `main`
+
+## Struktura projektu
+- Projekt jest monorepo z trzema głównymi komponentami: `esp32/`, `backend/`, `frontend/`
+- Dokumentacja blisko kodu (np. `WIRING_OLED.md` w `esp32/`)
+- Pliki konfiguracyjne w odpowiednich katalogach (`platformio.ini`, `package.json`)
+
+## Konwencje nazewnictwa
+- **Zmienne**: `camelCase`
+- **Funkcje**: `camelCase`
+- **Klasy**: `PascalCase`
+- **Stałe**: `UPPER_SNAKE_CASE`
+- **Endpointy API**: RESTful, kebab-case (np. `/api/esp32/data`)
+
+## Formatowanie kodu
+- Zgodne z konwencjami frameworka (Arduino style, Express style, Angular style)
+- Używaj automatycznego formatowania (Prettier, clang-format, itp.)
+- Zachowaj spójność w całym projekcie
+
+## Testowanie
+- ESP32: Testowanie na fizycznym urządzeniu
+- Backend: Testowe żądania w `test-requests.http`
+- Frontend: Testy jednostkowe i E2E (do zaimplementowania)
+
+## Priorytety MVP
+- Działająca funkcjonalność ważniejsza niż optymalizacja
+- Proste rozwiązania zamiast skomplikowanych
+- Kod czytelny i łatwy w utrzymaniu
+
+## Bezpieczeństwo MVP
+- Proste hasło (bez resetu, bez SSO)
+- Autoryzacja wymagana dla wszystkich endpointów (do zaimplementowania)
+- HTTPS nie w MVP (lokalne demo)
+
+## Komunikacja
+- ESP32 → Backend: `POST /api/esp32/data` (co 1s)
+- ESP32 ← Backend: `GET /api/esp32/power` (co 3s)
+- Frontend → Backend: `GET /api/data` (polling co 5s)
+- Frontend → Backend: Komendy sterujące (do zaimplementowania)
+
+## Model danych
+- MVP przechowuje wyłącznie aktualny stan (brak historii)
+- ESP32 ma zahardcodowane `deviceId` (nie w MVP)
+- Użytkownicy powiązani z `deviceId` (do zaimplementowania)

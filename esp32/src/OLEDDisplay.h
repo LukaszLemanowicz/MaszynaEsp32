@@ -43,7 +43,7 @@ public:
     int getHeight() const;
     bool isReady() const;
     
-    // Metody do wyświetlania informacji o destylatorze
+    // Metody do wyświetlania informacji o maszynie
     void showWelcomeMessage();
     void showTemperature(float temp);
     void showError(const char* error);

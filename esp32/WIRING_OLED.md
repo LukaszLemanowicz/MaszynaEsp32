@@ -35,8 +35,8 @@ ESP32 DevKit          OLED SSD1306
 ## Testowanie
 
 Po podłączeniu uruchom kod - powinieneś zobaczyć:
-1. Komunikat powitalny "DESTYLATOR ESP32 v1.0"
-2. Status "DESTYLACJA" z temperaturą
+1. Komunikat powitalny "Maszyna ESP32 v1.0"
+2. Status "proces" z temperaturą
 3. Pasek postępu
 4. Komunikat "Gotowe!"
 

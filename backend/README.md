@@ -1,6 +1,6 @@
-# Destylator ESP32 - Backend API
+# Maszyna ESP32 - Backend API
 
-Backend Node.js do komunikacji z systemem destylacji ESP32 przez REST API.
+Backend Node.js do komunikacji z systemem maszyny ESP32 przez REST API.
 
 ## 🚀 Uruchomienie
 
@@ -26,7 +26,7 @@ ESP32 wysyła swoje dane do serwera.
   "humidity": 60.0,
   "pressure": 1013.2,
   "status": "online",
-  "distillationProgress": 45,
+  "processProgress": 45,
   "isRunning": true
 }
 ```
@@ -70,8 +70,8 @@ Ustaw temperaturę docelową.
 }
 ```
 
-#### `POST /api/command/distillation`
-Start/Stop destylacji.
+#### `POST /api/command/process`
+Start/Stop procesu.
 
 **Request Body:**
 ```json
@@ -100,7 +100,7 @@ Pobierz aktualne dane z ESP32.
   "humidity": 60.0,
   "pressure": 1013.2,
   "status": "online",
-  "distillationProgress": 45,
+  "processProgress": 45,
   "isRunning": true,
   "targetTemperature": 80.0,
   "lastUpdate": "2024-01-01T12:00:00.000Z"
@@ -132,9 +132,9 @@ Content-Type: application/json
 }
 ```
 
-### 2. Rozpocznij destylację
+### 2. Rozpocznij proces
 ```
-POST http://localhost:3000/api/command/distillation
+POST http://localhost:3000/api/command/process
 Content-Type: application/json
 
 {
@@ -147,9 +147,9 @@ Content-Type: application/json
 GET http://localhost:3000/api/data
 ```
 
-### 4. Zatrzymaj destylację
+### 4. Zatrzymaj proces
 ```
-POST http://localhost:3000/api/command/distillation
+POST http://localhost:3000/api/command/process
 Content-Type: application/json
 
 {
@@ -186,5 +186,5 @@ backend/
 Backend loguje wszystkie operacje w konsoli:
 - 📡 Otrzymane dane z ESP32
 - 🌡️ Wysłane komendy temperatury
-- 🔄 Komendy start/stop destylacji
+- 🔄 Komendy start/stop procesu
 - ✅ Potwierdzenia wykonania komend

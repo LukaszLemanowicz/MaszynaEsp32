@@ -1,13 +1,13 @@
-# Destylator ESP32 - System Monorepo
+# Maszyna ESP32 - System Monorepo
 
-Projekt systemu destylacji z kontrolą przez ESP32, backend API i frontend webowy.
+Projekt systemu Mazzyny z kontrolą przez ESP32, backend API i frontend webowy.
 
 ## 📁 Struktura projektu
 
 Projekt jest zorganizowany jako **monorepo** z trzema głównymi komponentami:
 
 ```
-DestylatorESP32/
+MaszynaESP32/
 ├── esp32/          # Firmware dla ESP32 (PlatformIO)
 ├── backend/        # Backend API (Node.js/Express)
 └── frontend/       # Frontend webowy (React/Vue/etc.)

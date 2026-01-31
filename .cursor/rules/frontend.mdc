@@ -1,0 +1,173 @@
+# Reguły dla Frontend (Angular + RxJS + Tailwind)
+
+## Stack technologiczny
+- **Framework**: Angular (najnowsza stabilna wersja)
+- **Reaktywność**: RxJS (preferowane zamiast Angular Signals)
+- **Stylowanie**: Tailwind CSS
+- **TypeScript**: Strict mode włączony
+- **Komunikacja**: HTTP polling co 5s (zgodnie z PRD)
+
+## Struktura projektu Angular
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── core/              # Singleton services, guards, interceptors
+│   │   │   ├── services/
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── data.service.ts
+│   │   │   │   └── command.service.ts
+│   │   │   ├── guards/
+│   │   │   │   └── auth.guard.ts
+│   │   │   └── interceptors/
+│   │   │       └── auth.interceptor.ts
+│   │   ├── features/          # Feature modules
+│   │   │   ├── dashboard/
+│   │   │   │   ├── dashboard.component.ts
+│   │   │   │   ├── dashboard.component.html
+│   │   │   │   └── dashboard.component.scss
+│   │   │   └── auth/
+│   │   │       ├── login/
+│   │   │       └── register/
+│   │   ├── shared/            # Shared components, pipes, directives
+│   │   │   ├── components/
+│   │   │   ├── pipes/
+│   │   │   └── directives/
+│   │   ├── models/            # TypeScript interfaces/models
+│   │   │   ├── user.model.ts
+│   │   │   ├── device.model.ts
+│   │   │   └── command.model.ts
+│   │   └── app.component.ts
+│   └── assets/
+```
+
+## RxJS - Preferowane podejście
+- **Używaj RxJS** zamiast Angular Signals gdzie to możliwe
+- **Observables** dla asynchronicznych operacji
+- **Operatory RxJS**: `map`, `catchError`, `retry`, `debounceTime`, `switchMap`
+- **Unsubscribe**: Używaj `takeUntil` pattern lub `async` pipe w szablonach
+- **Polling**: Używaj `interval()` z RxJS dla polling co 5s
+
+### Przykład serwisu z RxJS:
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, interval, switchMap, catchError, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+@Injectable({ providedIn: 'root' })
+export class DataService {
+  private readonly POLLING_INTERVAL = 5000; // 5 sekund
+  
+  constructor(private http: HttpClient) {}
+  
+  getDeviceData(): Observable<DeviceData> {
+    return interval(this.POLLING_INTERVAL).pipe(
+      switchMap(() => this.http.get<DeviceData>('/api/data')),
+      catchError(error => {
+        console.error('Błąd pobierania danych:', error);
+        return of(null);
+      })
+    );
+  }
+}
+```
+
+## Konwencje nazewnictwa
+- **Komponenty**: `PascalCase` z sufiksem `Component` (np. `DashboardComponent`)
+- **Serwisy**: `PascalCase` z sufiksem `Service` (np. `AuthService`, `DataService`)
+- **Interfejsy/Models**: `PascalCase` z sufiksem odpowiednim do typu (np. `User`, `DeviceData`)
+- **Zmienne**: `camelCase`
+- **Stałe**: `UPPER_SNAKE_CASE`
+- **Pliki**: `kebab-case.component.ts`, `kebab-case.service.ts`
+
+## Komponenty
+- **OnPush Change Detection**: Używaj gdzie możliwe dla lepszej wydajności
+- **Jeden ekran główny**: Dashboard z wszystkimi funkcjami (zgodnie z PRD)
+- **Mobile-first**: Projektuj najpierw dla mobile, potem desktop
+- **Minimalistyczny UI**: Prosty, estetyczny interfejs
+
+## Serwisy
+- **Singleton**: Wszystkie serwisy jako `providedIn: 'root'`
+- **AuthService**: Obsługa logowania, rejestracji, sesji
+- **DataService**: Pobieranie danych (polling co 5s), status online/offline
+- **CommandService**: Wysyłanie komend (ON/OFF, serwo)
+- **Error handling**: Obsługa błędów w serwisach, nie w komponentach
+
+## Routing
+- **Guards**: `AuthGuard` dla ochrony tras wymagających logowania
+- **Lazy loading**: Dla modułów feature (jeśli będą większe)
+- **Redirect**: Przekierowanie do logowania przy braku sesji
+
+## Tailwind CSS
+- **Utility-first**: Używaj klas Tailwind zamiast custom CSS
+- **Responsive**: Mobile-first breakpoints (`sm:`, `md:`, `lg:`)
+- **Custom colors**: Zdefiniuj kolory projektu w `tailwind.config.js`
+- **Komponenty**: Używaj `@apply` dla powtarzalnych wzorców (oszczędnie)
+
+### Przykład użycia Tailwind:
+```html
+<div class="container mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Dashboard</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Content -->
+    </div>
+  </div>
+</div>
+```
+
+## Polling danych
+- **Interwał**: 5 sekund (zdefiniowane w PRD)
+- **Obsługa błędów**: Wyświetlanie komunikatów w UI
+- **Status offline**: Blokada kontrolek sterowania
+- **Unsubscribe**: Automatyczne przy użyciu `async` pipe lub `takeUntil`
+
+## Obsługa błędów
+- **Global error handler**: Interceptor dla błędów HTTP
+- **Komunikaty**: Czytelne komunikaty błędów w UI
+- **Retry**: Opcjonalny retry dla operacji krytycznych
+- **Offline**: Wykrywanie statusu offline i blokada sterowania
+
+## Autoryzacja
+- **JWT lub session**: Token/sesja przechowywane w localStorage lub cookie
+- **Interceptor**: Automatyczne dodawanie tokenu do żądań
+- **Guard**: Ochrona tras wymagających logowania
+- **Redirect**: Przekierowanie do logowania przy braku autoryzacji
+
+## Formularze
+- **Reactive Forms**: Preferowane zamiast Template-driven
+- **Walidacja**: Walidatory Angular + custom validators
+- **Error messages**: Czytelne komunikaty błędów walidacji
+
+## State management
+- **RxJS BehaviorSubject**: Dla prostego state management (wystarczy dla MVP)
+- **Nie używaj NgRx**: Zbyt skomplikowane dla MVP
+- **Serwisy jako state**: State przechowywany w serwisach
+
+## Antywzorce - NIE RÓB TEGO
+- ❌ Nie używaj Angular Signals - preferuj RxJS
+- ❌ Nie zapominaj o unsubscribe (memory leaks)
+- ❌ Nie mieszaj logiki biznesowej w komponentach - używaj serwisów
+- ❌ Nie używaj inline styles - używaj Tailwind
+- ❌ Nie tworz zbyt wielu małych komponentów - dla MVP jeden ekran główny
+- ❌ Nie blokuj UI podczas polling - używaj async operations
+- ❌ Nie ignoruj błędów - zawsze obsługuj i wyświetlaj komunikaty
+
+## Dobre praktyki
+- ✅ Używaj RxJS dla asynchronicznych operacji
+- ✅ Wydziel logikę do serwisów
+- ✅ Używaj TypeScript strict mode
+- ✅ Mobile-first design z Tailwind
+- ✅ Obsługuj błędy gracefully
+- ✅ Blokuj sterowanie gdy offline
+- ✅ Używaj OnPush change detection gdzie możliwe
+- ✅ Dokumentuj interfejsy i modele
+
+## UI/UX wymagania (z PRD)
+- **Minimalistyczny**: Prosty, estetyczny interfejs
+- **Mobile-first**: Działa dobrze na mobile
+- **Jeden ekran główny**: Wszystkie funkcje na jednym ekranie
+- **Status online/offline**: Widoczny status połączenia
+- **Czas ostatniej aktualizacji**: Wyświetlany znacznik czasu
+- **Blokada sterowania**: Kontrolki nieaktywne gdy offline

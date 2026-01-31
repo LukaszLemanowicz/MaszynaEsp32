@@ -1,0 +1,241 @@
+# Reguły dla Backend (Node.js + Express + SQLite)
+
+## Stack technologiczny
+- **Runtime**: Node.js (najnowsza LTS wersja)
+- **Framework**: Express.js (v5.1.0)
+- **Baza danych**: SQLite (better-sqlite3) - prosta, bez osobnego serwera
+- **Middleware**: cors, body-parser
+- **Port**: 4200 (zdefiniowany w `server.js`)
+
+## Struktura projektu
+```
+backend/
+├── server.js              # Główny plik serwera (entry point)
+├── config/
+│   └── database.js        # Konfiguracja SQLite
+├── models/                # Modele danych
+│   ├── user.model.js
+│   └── device.model.js
+├── routes/                # Endpointy API
+│   ├── auth.routes.js     # Rejestracja, logowanie
+│   ├── data.routes.js     # Pobieranie danych
+│   ├── command.routes.js # Komendy sterujące
+│   └── esp32.routes.js   # Endpointy dla ESP32
+├── services/              # Logika biznesowa
+│   ├── auth.service.js
+│   ├── device.service.js
+│   └── command.service.js
+├── middleware/            # Custom middleware
+│   ├── auth.middleware.js # Weryfikacja tokenu/sesji
+│   └── error.middleware.js
+├── utils/                 # Funkcje pomocnicze
+│   └── password.utils.js  # Hashowanie haseł
+├── database/              # Migracje i seed
+│   ├── migrations/
+│   └── seed.js
+├── package.json
+└── README.md
+```
+
+## Baza danych - SQLite
+- **Biblioteka**: `better-sqlite3` (szybsza niż `sqlite3`, synchroniczna)
+- **Plik bazy**: `backend/database/app.db` (dodaj do `.gitignore`)
+- **Migracje**: Proste skrypty SQL w `database/migrations/`
+- **Model**: Tylko aktualny stan (brak historii w MVP)
+
+### Schemat bazy danych (MVP):
+```sql
+-- Tabela użytkowników
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  device_id TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela aktualnego stanu urządzenia
+CREATE TABLE device_state (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  device_id TEXT UNIQUE NOT NULL,
+  temperature1 REAL,
+  temperature2 REAL,
+  temperature3 REAL,
+  status TEXT DEFAULT 'offline',
+  last_update DATETIME,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela oczekujących komend
+CREATE TABLE pending_commands (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  device_id TEXT NOT NULL,
+  command_type TEXT NOT NULL, -- 'power_on', 'power_off', 'servo'
+  command_value REAL, -- dla serwa: 0-100
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  acknowledged BOOLEAN DEFAULT 0,
+  acknowledged_at DATETIME
+);
+```
+
+## Konwencje nazewnictwa
+- **Zmienne**: `camelCase` (np. `esp32Data`, `currentPower`)
+- **Funkcje**: `camelCase` (np. `authenticateUser()`, `getDeviceData()`)
+- **Klasy**: `PascalCase` (np. `UserService`)
+- **Endpointy**: RESTful, kebab-case (np. `/api/esp32/data`)
+- **Pliki**: `kebab-case.js` (np. `auth.service.js`)
+
+## Organizacja kodu
+```javascript
+// server.js - struktura
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+const dataRoutes = require('./routes/data.routes');
+// ...
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/data', dataRoutes);
+// ...
+
+// Error handling
+app.use(errorMiddleware);
+
+// Start server
+app.listen(PORT, () => { /* ... */ });
+```
+
+## Endpointy API
+
+### ESP32 → Backend
+- `POST /api/esp32/data` - Odbieranie danych z ESP32 (temperatury)
+- `GET /api/esp32/power` - ESP32 pobiera moc
+- `GET /api/esp32/commands` - ESP32 pobiera oczekujące komendy
+- `POST /api/esp32/command/ack` - ESP32 potwierdza wykonanie komendy
+
+### Frontend → Backend
+- `POST /api/auth/register` - Rejestracja użytkownika
+- `POST /api/auth/login` - Logowanie
+- `POST /api/auth/logout` - Wylogowanie
+- `GET /api/data` - Pobieranie aktualnych danych (polling co 5s)
+- `POST /api/command/power` - Komenda ON/OFF
+- `POST /api/command/servo` - Komenda ustawienia serwa
+
+## Obsługa błędów
+- **Status codes**: 
+  - `200` - sukces
+  - `400` - błąd walidacji
+  - `401` - brak autoryzacji
+  - `404` - nie znaleziono
+  - `500` - błąd serwera
+- **Format odpowiedzi błędów**:
+```javascript
+{
+  "error": "Opis błędu",
+  "code": "ERROR_CODE",
+  "details": {} // opcjonalne
+}
+```
+- **Logowanie**: Używaj `console.log()` z emoji dla czytelności
+- **Error middleware**: Globalna obsługa błędów
+
+## Autoryzacja
+- **JWT lub session**: Token/sesja dla autoryzacji
+- **Middleware**: `authMiddleware` dla chronionych endpointów
+- **Wszystkie endpointy**: Wymagają autoryzacji (oprócz ESP32 endpoints i auth)
+- **DeviceId**: Użytkownik powiązany z `deviceId` (z bazy danych)
+
+## Walidacja
+- **Input validation**: Sprawdzaj dane wejściowe przed przetworzeniem
+- **Walidacja mocy**: 0-1000W
+- **Walidacja serwa**: 0-100
+- **Walidacja użytkownika**: Unikalny username, hasło min. 8 znaków
+
+## Haszowanie haseł
+- **Biblioteka**: `bcrypt` lub `bcryptjs`
+- **Rounds**: Minimum 10 rounds
+- **Nie przechowuj**: Haseł w plain text
+
+## SQLite - Best practices
+- **Połączenie**: Jeden connection pool dla całej aplikacji
+- **Transakcje**: Używaj transakcji dla operacji wieloetapowych
+- **Prepared statements**: Zawsze używaj prepared statements (zapobiega SQL injection)
+- **Backup**: Regularne kopie zapasowe pliku `.db` (nie w MVP)
+
+### Przykład użycia SQLite:
+```javascript
+const Database = require('better-sqlite3');
+const db = new Database('database/app.db');
+
+// Prepared statement
+const getUser = db.prepare('SELECT * FROM users WHERE username = ?');
+const user = getUser.get(username);
+
+// Transaction
+const insertUser = db.transaction((username, passwordHash, deviceId) => {
+  const stmt = db.prepare('INSERT INTO users (username, password_hash, device_id) VALUES (?, ?, ?)');
+  return stmt.run(username, passwordHash, deviceId);
+});
+```
+
+## Polling i status online/offline
+- **Timeout**: Urządzenie offline jeśli brak aktualizacji przez 10 sekund (do doprecyzowania)
+- **Status**: Aktualizowany przy każdym `POST /api/esp32/data`
+- **Last update**: Przechowywany w `device_state.last_update`
+
+## Komendy
+- **Kolejka komend**: Przechowywane w `pending_commands`
+- **ACK**: Po potwierdzeniu przez ESP32, ustaw `acknowledged = 1`
+- **Czyszczenie**: Usuń stare komendy (np. starsze niż 1 minuta)
+
+## Middleware
+- `cors()` - włączone dla wszystkich żądań
+- `bodyParser.json()` - parsowanie JSON
+- `bodyParser.urlencoded()` - parsowanie form data
+- `authMiddleware` - weryfikacja tokenu/sesji
+- `errorMiddleware` - globalna obsługa błędów
+
+## Logowanie
+- **Format**: `console.log()` z emoji dla czytelności
+- **Przykłady**: 
+  - `console.log('📡 Otrzymano dane z ESP32:', data)`
+  - `console.log('✅ Użytkownik zalogowany:', username)`
+  - `console.log('❌ Błąd:', error)`
+
+## Antywzorce - NIE RÓB TEGO
+- ❌ Nie przechowuj haseł w plain text
+- ❌ Nie używaj SQL bez prepared statements (SQL injection)
+- ❌ Nie mieszaj logiki biznesowej w routes - używaj services
+- ❌ Nie ignoruj błędów - zawsze obsługuj i loguj
+- ❌ Nie hardcoduj wartości - używaj zmiennych środowiskowych
+- ❌ Nie zapominaj o walidacji danych wejściowych
+- ❌ Nie używaj synchronicznych operacji blokujących (oprócz SQLite)
+
+## Dobre praktyki
+- ✅ Używaj prepared statements dla SQL
+- ✅ Wydziel logikę do services
+- ✅ Waliduj wszystkie dane wejściowe
+- ✅ Używaj transakcji dla operacji wieloetapowych
+- ✅ Hashuj hasła przed zapisem
+- ✅ Loguj ważne operacje
+- ✅ Obsługuj błędy gracefully
+- ✅ Używaj middleware dla wspólnej logiki
+- ✅ Dokumentuj endpointy API
+
+## Zmienne środowiskowe
+- **Plik**: `.env` (dodaj do `.gitignore`)
+- **Biblioteka**: `dotenv` do ładowania zmiennych
+- **Przykłady**: `PORT`, `DB_PATH`, `JWT_SECRET`, `BCRYPT_ROUNDS`
+
+## Testowanie
+- **Testowe żądania**: `test-requests.http` (już istnieje)
+- **Testy jednostkowe**: Do zaimplementowania (Jest/Mocha)
+- **Testy integracyjne**: Do zaimplementowania

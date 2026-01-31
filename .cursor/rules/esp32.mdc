@@ -1,0 +1,116 @@
+# Reguły dla ESP32 (Firmware)
+
+## Platforma i narzędzia
+- **Platform**: PlatformIO
+- **Framework**: Arduino
+- **Board**: ESP32 DevKit
+- Edytuj w PlatformIO IDE lub VS Code z rozszerzeniem PlatformIO
+
+## Struktura plików
+- **Główny plik**: `esp32/src/main.cpp`
+  - `setup()` - inicjalizacja na początku
+  - `loop()` - główna pętla
+  - Funkcje pomocnicze na końcu pliku
+- **Klasy**: Oddzielne pliki `.h` i `.cpp` (np. `OLEDDisplay.h`, `OLEDDisplay.cpp`)
+- **Maksymalna długość pliku**: ~300 linii (jeśli więcej, podziel na mniejsze moduły)
+- **Podział odpowiedzialności**: 
+  - Jeden plik = jedna odpowiedzialność
+  - Funkcje związane z WiFi w jednym miejscu
+  - Funkcje związane z czujnikami w jednym miejscu
+  - Funkcje związane z wyświetlaczem w klasie OLEDDisplay
+
+## Konwencje nazewnictwa
+- **Zmienne**: `camelCase` (np. `systemData`, `lastDataSend`)
+- **Funkcje**: `camelCase` (np. `connectToWiFi()`, `updateSensorData()`)
+- **Klasy**: `PascalCase` (np. `OLEDDisplay`)
+- **Stałe**: `UPPER_SNAKE_CASE` (np. `LED_PIN`, `ONE_WIRE_BUS`)
+- **Piny GPIO**: Definiowane jako `#define` na początku pliku
+
+## Organizacja kodu
+```cpp
+// 1. Definicje pinów i stałych
+#define LED_PIN 2
+#define ONE_WIRE_BUS 4
+
+// 2. Konfiguracja (WiFi, serwer)
+const char* ssid = "...";
+const char* password = "...";
+
+// 3. Instancje bibliotek
+OLEDDisplay oled;
+OneWire oneWire(ONE_WIRE_BUS);
+
+// 4. Struktury danych
+struct SystemData {
+  float temperature1 = 0.0;
+  // ...
+} systemData;
+
+// 5. Deklaracje funkcji
+void connectToWiFi();
+void updateSensorData();
+
+// 6. setup() i loop()
+void setup() { /* ... */ }
+void loop() { /* ... */ }
+
+// 7. Implementacje funkcji
+```
+
+## Obsługa błędów
+- **Czujniki**: Wartość `-999.0` oznacza błąd odczytu
+- **WiFi**: Status przechowywany w `systemData.wifiStatus`
+- **HTTP**: Kod odpowiedzi logowany w `systemData.dataStatus`
+- **Logowanie**: Używaj `Serial.println()` z emoji dla czytelności (np. `Serial.println("✅ WiFi połączone")`)
+
+## Komunikacja HTTP
+- Używaj `HTTPClient` z biblioteki ESP32
+- Zawsze zamykaj połączenie: `http.end()`
+- Sprawdzaj status WiFi przed każdym żądaniem HTTP
+- Używaj `ArduinoJson` z `DynamicJsonDocument` do parsowania JSON
+- Timeout: Używaj domyślnych wartości bibliotek (lub ustaw explicit timeout)
+
+## Retry i odporność
+- ESP32 automatycznie ponawia połączenie WiFi bez limitu
+- W przypadku błędu HTTP, loguj błąd i kontynuuj działanie
+- Nie blokuj głównej pętli długimi operacjami
+
+## Hardware
+- **Czujniki**: DS18B20 (OneWire) na pinie GPIO 4
+- **Wyświetlacz**: OLED SSD1306 128x64 (I2C: SCL=GPIO22, SDA=GPIO21)
+- **LED**: Wbudowana dioda na GPIO 2
+- Dokumentacja podłączenia: `esp32/WIRING_OLED.md`
+
+## Konfiguracja
+- SSID i hasło WiFi: Hardcoded w kodzie (linie 13-14 w `main.cpp`)
+- Server URL: Hardcoded w kodzie (linia 15 w `main.cpp`)
+- TODO: Przenieść do konfiguracji (nie w MVP)
+
+## Częstotliwość operacji
+- Wysyłanie danych: Co 1 sekundę (`POST /api/esp32/data`)
+- Pobieranie mocy: Co 3 sekundy (`GET /api/esp32/power`)
+- Aktualizacja wyświetlacza: W każdej iteracji `loop()`
+- Odczyt czujników: Przed wysłaniem danych
+
+## Biblioteki
+- `Adafruit SSD1306` (v2.5.7) - wyświetlacz OLED
+- `Adafruit GFX Library` (v1.11.5) - grafika
+- `ArduinoJson` (v6.21.3) - parsowanie JSON
+- `DallasTemperature` (v3.9.0) - czujniki DS18B20
+- `OneWire` (v2.3.7) - protokół OneWire
+
+## Antywzorce - NIE RÓB TEGO
+- ❌ Nie umieszczaj całej logiki w `loop()` - wydziel funkcje
+- ❌ Nie blokuj `loop()` długimi operacjami (używaj `millis()` do timing)
+- ❌ Nie hardcoduj wartości magicznych - używaj stałych
+- ❌ Nie mieszaj logiki WiFi, czujników i wyświetlacza w jednej funkcji
+- ❌ Nie ignoruj błędów - zawsze loguj i obsługuj
+- ❌ Nie tworz plików dłuższych niż ~300 linii - podziel na moduły
+
+## Dobre praktyki
+- ✅ Wydziel funkcje dla każdej odpowiedzialności
+- ✅ Używaj struktur do grupowania powiązanych danych
+- ✅ Sprawdzaj status przed operacjami (WiFi, czujniki)
+- ✅ Loguj ważne zdarzenia (połączenie, błędy)
+- ✅ Używaj `millis()` zamiast `delay()` dla operacji cyklicznych
+- ✅ Waliduj dane przed wysłaniem (sprawdź czy nie NaN, nie -999.0)
