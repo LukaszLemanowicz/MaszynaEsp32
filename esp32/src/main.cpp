@@ -15,9 +15,9 @@
 // Konfiguracja WiFi
 const char* ssid = "PLAY_Swiatlowodowy_572B";
 const char* password = "pz9zfVmGaN";
-// sprawdz ip komputera przez ipconfig 
-const char* serverUrl = "http://192.168.0.179:3000";
-const char* deviceId = "test";  // Device ID zgodnie z wymaganiami
+// Adres serwera VPS
+const char* serverUrl = "http://45.90.121.228";
+const char* deviceId = "maszyna";  // Device ID zgodnie z wymaganiami
 
 // Instancje
 OLEDDisplay oled;
