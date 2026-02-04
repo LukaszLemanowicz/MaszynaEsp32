@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, interval, throwError, of } from 'rxjs';
-import { switchMap, take, catchError, map } from 'rxjs/operators';
+import { Observable, interval, throwError, of, timer, race } from 'rxjs';
+import { switchMap, take, catchError, map, first, timeout, filter } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
 import {
   Command,
@@ -81,15 +81,28 @@ export class CommandService {
     commandId: number,
     maxAttempts: number = API_CONFIG.commandStatusMaxAttempts
   ): Observable<Command | null> {
-    return interval(API_CONFIG.commandStatusPollingInterval).pipe(
+    const timeoutMs = maxAttempts * API_CONFIG.commandStatusPollingInterval;
+    
+    // Stwórz Observable, który sprawdza status komendy
+    const statusCheck$ = interval(API_CONFIG.commandStatusPollingInterval).pipe(
       switchMap(() => this.getCommandStatus(commandId)),
-      map((command) => {
-        if (command.acknowledged) {
-          return command;
-        }
-        return null;
-      }),
-      take(maxAttempts),
+      // Filtruj tylko potwierdzone komendy
+      filter((command) => command.acknowledged === true),
+      // Zatrzymaj się po pierwszym potwierdzeniu
+      first(),
+      catchError((error) => {
+        console.error('Błąd podczas polling statusu komendy:', error);
+        return of(null);
+      })
+    );
+    
+    // Stwórz Observable timeout
+    const timeout$ = timer(timeoutMs).pipe(
+      map(() => null)
+    );
+    
+    // Race - zwróć pierwszy wynik (status lub timeout)
+    return race(statusCheck$, timeout$).pipe(
       catchError((error) => {
         console.error('Błąd podczas polling statusu komendy:', error);
         return of(null);
@@ -129,15 +142,18 @@ export class CommandService {
         // Rozpocznij polling statusu komendy
         return this.pollCommandStatus(response.command.id).pipe(
           map((command) => {
-            if (command && command.acknowledged) {
-              return command;
-            }
-            return null; // Timeout
+            // pollCommandStatus zwraca Command jeśli potwierdzona, null jeśli timeout
+            return command;
           })
         );
       }),
       catchError((error) => {
         console.error('Błąd podczas oczekiwania na potwierdzenie:', error);
+        // Jeśli błąd HTTP (np. 400, 500), zwróć błąd
+        if (error.status) {
+          return throwError(() => error);
+        }
+        // Inne błędy (timeout, itp.) - zwróć null
         return of(null);
       })
     );

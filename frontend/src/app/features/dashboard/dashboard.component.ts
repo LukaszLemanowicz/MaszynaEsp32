@@ -211,6 +211,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Ustaw stan loading i sending - nie pokazuj błędu od razu
     this.powerLoading = true;
     this.powerFeedbackState = 'sending';
     this.powerErrorMessage = '';
@@ -223,6 +224,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (command) => {
           this.powerLoading = false;
+          // Sprawdź czy komenda została potwierdzona
           if (command && command.acknowledged) {
             this.powerState = isOn;
             this.powerFeedbackState = 'success';
@@ -233,12 +235,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
               this.cdr.markForCheck();
             }, 5000);
           } else {
+            // Timeout - komenda nie została potwierdzona w czasie
             this.powerFeedbackState = 'error';
-            this.powerErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie.';
+            this.powerErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie. Spróbuj ponownie.';
             this.cdr.markForCheck();
           }
         },
         error: (error) => {
+          // Błąd HTTP (np. 400, 500) - pokaż błąd od razu
           this.powerLoading = false;
           this.powerFeedbackState = 'error';
           if (error.message) {
@@ -258,6 +262,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Ustaw stan loading i sending - nie pokazuj błędu od razu
     this.servoLoading = true;
     this.servoFeedbackState = 'sending';
     this.servoErrorMessage = '';
@@ -268,6 +273,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (command) => {
           this.servoLoading = false;
+          // Sprawdź czy komenda została potwierdzona
           if (command && command.acknowledged) {
             this.servoFeedbackState = 'success';
             this.cdr.markForCheck();
@@ -277,12 +283,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
               this.cdr.markForCheck();
             }, 5000);
           } else {
+            // Timeout - komenda nie została potwierdzona w czasie
             this.servoFeedbackState = 'error';
-            this.servoErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie.';
+            this.servoErrorMessage = 'Komenda nie została wykonana w oczekiwanym czasie. Spróbuj ponownie.';
             this.cdr.markForCheck();
           }
         },
         error: (error) => {
+          // Błąd HTTP (np. 400, 500) - pokaż błąd od razu
           this.servoLoading = false;
           this.servoFeedbackState = 'error';
           if (error.message) {

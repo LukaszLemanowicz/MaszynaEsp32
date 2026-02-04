@@ -68,18 +68,34 @@ export class DeviceStateService {
     this.pollingSubscription = interval(intervalMs)
       .pipe(
         startWith(0), // Natychmiastowe pierwsze wywołanie
-        switchMap(() => this.getDeviceState()),
-        catchError((error) => {
-          console.error('Błąd podczas polling:', error);
-          // Kontynuuj polling nawet przy błędzie
-          return of(null);
-        })
+        switchMap(() => this.getDeviceState().pipe(
+          catchError((error) => {
+            console.error('Błąd podczas polling:', error);
+            // Jeśli błąd, zwróć poprzedni stan (nie resetuj na null)
+            // Tylko jeśli to 404 (urządzenie nie istnieje), zwróć stan offline
+            if (error.status === 404) {
+              const offlineState: DeviceState = {
+                deviceId: '',
+                temperature1: null,
+                temperature2: null,
+                temperature3: null,
+                status: 'offline',
+                lastUpdate: null,
+              };
+              return of(offlineState);
+            }
+            // Dla innych błędów, zwróć poprzedni stan (jeśli istnieje)
+            const currentState = this.deviceStateSubject.value;
+            return currentState ? of(currentState) : of(null);
+          })
+        ))
       )
       .subscribe({
         next: (state) => {
           if (state) {
             this.deviceStateSubject.next(state);
           }
+          // Jeśli state jest null, nie aktualizuj - zachowaj poprzedni stan
         },
         error: (error) => {
           console.error('Błąd subskrypcji polling:', error);

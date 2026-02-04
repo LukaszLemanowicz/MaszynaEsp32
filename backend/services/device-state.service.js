@@ -1,7 +1,9 @@
 const { query } = require('../database/db');
 
 // Timeout uznania urządzenia za offline (w sekundach)
-const OFFLINE_TIMEOUT_SECONDS = parseInt(process.env.OFFLINE_TIMEOUT_SECONDS || '10', 10);
+// Zwiększono do 20 sekund, aby uniknąć fałszywych alarmów przy opóźnieniach sieci
+// ESP32 wysyła dane co 1 sekundę, frontend pobiera co 5 sekund
+const OFFLINE_TIMEOUT_SECONDS = parseInt(process.env.OFFLINE_TIMEOUT_SECONDS || '20', 10);
 
 /**
  * Aktualizacja lub utworzenie stanu urządzenia
@@ -63,8 +65,9 @@ async function getDeviceState(deviceId) {
 
   const state = result.rows[0];
   
-  // Oblicz status na podstawie last_update (jeśli starsze niż timeout, to offline)
-  let calculatedStatus = state.status;
+  // Oblicz status dynamicznie na podstawie last_update (nie aktualizuj w bazie!)
+  // Status w bazie może być przestarzały, zawsze obliczamy go na podstawie czasu
+  let calculatedStatus = 'online'; // Domyślnie online, jeśli jest last_update
   if (state.last_update) {
     const lastUpdate = new Date(state.last_update);
     const now = new Date();
@@ -72,11 +75,6 @@ async function getDeviceState(deviceId) {
     
     if (diffSeconds > OFFLINE_TIMEOUT_SECONDS) {
       calculatedStatus = 'offline';
-      // Zaktualizuj status w bazie
-      await query(
-        'UPDATE device_state SET status = ? WHERE device_id = ?',
-        ['offline', deviceId]
-      );
     }
   } else {
     calculatedStatus = 'offline';

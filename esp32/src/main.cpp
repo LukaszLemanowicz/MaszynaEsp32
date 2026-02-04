@@ -181,8 +181,14 @@ void sendDataToServer() {
   if (WiFi.status() != WL_CONNECTED) return;
   
   HTTPClient http;
-  http.begin(serverUrl + String("/api/esp32/data"));
+  String fullUrl = String(serverUrl) + "/api/esp32/data";
+  
+  Serial.println("📤 Wysyłanie danych do: " + fullUrl);
+  
+  http.begin(fullUrl);
+  http.setTimeout(5000);  // Timeout 5 sekund
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("User-Agent", "ESP32-Maszyna/1.0");
   
   // Przygotuj dane JSON zgodnie z nowym API
   DynamicJsonDocument doc(512);
@@ -195,14 +201,55 @@ void sendDataToServer() {
   String jsonString;
   serializeJson(doc, jsonString);
   
+  Serial.println("📦 Dane JSON: " + jsonString);
+  
   int httpResponseCode = http.POST(jsonString);
   
   if (httpResponseCode > 0) {
     systemData.dataStatus = "OK (" + String(httpResponseCode) + ")";
     systemData.lastError = "";
+    Serial.println("✅ Wysłano dane, kod odpowiedzi: " + String(httpResponseCode));
+    
+    // Odczytaj odpowiedź dla debugowania
+    String response = http.getString();
+    if (response.length() > 0) {
+      Serial.println("📥 Odpowiedź: " + response);
+    }
   } else {
     systemData.dataStatus = "Blad";
-    systemData.lastError = "Wysylanie: " + String(httpResponseCode);
+    String errorMsg = "Wysylanie: " + String(httpResponseCode);
+    systemData.lastError = errorMsg;
+    Serial.println("❌ Błąd wysyłania danych: " + errorMsg);
+    
+    // Szczegółowe kody błędów HTTPClient (ujemne wartości)
+    switch(httpResponseCode) {
+      case -1:  // HTTPC_ERROR_CONNECTION_REFUSED
+        Serial.println("   → Połączenie odrzucone przez serwer");
+        break;
+      case -2:  // HTTPC_ERROR_SEND_HEADER_FAILED
+        Serial.println("   → Błąd wysyłania nagłówków");
+        break;
+      case -3:  // HTTPC_ERROR_SEND_PAYLOAD_FAILED
+        Serial.println("   → Błąd wysyłania danych");
+        break;
+      case -4:  // HTTPC_ERROR_NOT_CONNECTED
+        Serial.println("   → Brak połączenia WiFi");
+        break;
+      case -5:  // HTTPC_ERROR_CONNECTION_LOST
+        Serial.println("   → Utracono połączenie");
+        break;
+      case -6:  // HTTPC_ERROR_NO_STREAM
+        Serial.println("   → Brak strumienia danych");
+        break;
+      case -7:  // HTTPC_ERROR_NO_HTTP_SERVER
+        Serial.println("   → Serwer HTTP nie odpowiada");
+        break;
+      case -8:  // HTTPC_ERROR_TIMEOUT
+        Serial.println("   → Timeout połączenia");
+        break;
+      default:
+        Serial.println("   → Nieznany błąd (kod: " + String(httpResponseCode) + ")");
+    }
   }
   
   http.end();
@@ -213,12 +260,19 @@ void checkForCommands() {
   
   HTTPClient http;
   String url = String(serverUrl) + "/api/esp32/commands?deviceId=" + String(deviceId);
+  
+  Serial.println("📥 Pobieranie komend z: " + url);
+  
   http.begin(url);
+  http.setTimeout(5000);  // Timeout 5 sekund
+  http.addHeader("User-Agent", "ESP32-Maszyna/1.0");
   
   int httpResponseCode = http.GET();
   
   if (httpResponseCode == 200) {
     String response = http.getString();
+    Serial.println("📥 Odpowiedź komend: " + response);
+    
     DynamicJsonDocument doc(1024);
     DeserializationError error = deserializeJson(doc, response);
     
@@ -245,11 +299,46 @@ void checkForCommands() {
       systemData.lastError = "";
     } else {
       systemData.commandStatus = "Blad JSON";
-      systemData.lastError = "Parsowanie: " + String(error.c_str());
+      String errorMsg = "Parsowanie: " + String(error.c_str());
+      systemData.lastError = errorMsg;
+      Serial.println("❌ Błąd parsowania JSON: " + errorMsg);
     }
   } else if (httpResponseCode < 0) {
     systemData.commandStatus = "Blad";
-    systemData.lastError = "Komendy: " + String(httpResponseCode);
+    String errorMsg = "Komendy: " + String(httpResponseCode);
+    systemData.lastError = errorMsg;
+    Serial.println("❌ Błąd pobierania komend: " + errorMsg);
+    
+    // Szczegółowe kody błędów HTTPClient (ujemne wartości)
+    switch(httpResponseCode) {
+      case -1:  // HTTPC_ERROR_CONNECTION_REFUSED
+        Serial.println("   → Połączenie odrzucone przez serwer");
+        break;
+      case -2:  // HTTPC_ERROR_SEND_HEADER_FAILED
+        Serial.println("   → Błąd wysyłania nagłówków");
+        break;
+      case -4:  // HTTPC_ERROR_NOT_CONNECTED
+        Serial.println("   → Brak połączenia WiFi");
+        break;
+      case -5:  // HTTPC_ERROR_CONNECTION_LOST
+        Serial.println("   → Utracono połączenie");
+        break;
+      case -8:  // HTTPC_ERROR_TIMEOUT
+        Serial.println("   → Timeout połączenia");
+        break;
+      default:
+        Serial.println("   → Nieznany błąd (kod: " + String(httpResponseCode) + ")");
+    }
+  } else {
+    // Inny kod HTTP (np. 404, 500)
+    systemData.commandStatus = "Blad HTTP";
+    String errorMsg = "Kod: " + String(httpResponseCode);
+    systemData.lastError = errorMsg;
+    Serial.println("❌ Błąd HTTP: " + errorMsg);
+    String response = http.getString();
+    if (response.length() > 0) {
+      Serial.println("   Odpowiedź: " + response);
+    }
   }
   
   http.end();
@@ -299,8 +388,14 @@ void sendAck(int commandId) {
   if (WiFi.status() != WL_CONNECTED) return;
   
   HTTPClient http;
-  http.begin(serverUrl + String("/api/esp32/commands/ack"));
+  String fullUrl = String(serverUrl) + "/api/esp32/commands/ack";
+  
+  Serial.println("📤 Wysyłanie ACK do: " + fullUrl);
+  
+  http.begin(fullUrl);
+  http.setTimeout(5000);  // Timeout 5 sekund
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("User-Agent", "ESP32-Maszyna/1.0");
   
   // Przygotuj dane JSON dla ACK
   DynamicJsonDocument doc(256);
@@ -311,6 +406,8 @@ void sendAck(int commandId) {
   String jsonString;
   serializeJson(doc, jsonString);
   
+  Serial.println("📦 ACK JSON: " + jsonString);
+  
   int httpResponseCode = http.POST(jsonString);
   
   if (httpResponseCode == 200) {
@@ -318,6 +415,20 @@ void sendAck(int commandId) {
   } else {
     Serial.println("❌ Błąd wysyłania ACK: " + String(httpResponseCode));
     systemData.lastError = "ACK: " + String(httpResponseCode);
+    
+    // Szczegółowe kody błędów HTTPClient (ujemne wartości)
+    if (httpResponseCode < 0) {
+      switch(httpResponseCode) {
+        case -1:  // HTTPC_ERROR_CONNECTION_REFUSED
+          Serial.println("   → Połączenie odrzucone przez serwer");
+          break;
+        case -8:  // HTTPC_ERROR_TIMEOUT
+          Serial.println("   → Timeout połączenia");
+          break;
+        default:
+          Serial.println("   → Nieznany błąd (kod: " + String(httpResponseCode) + ")");
+      }
+    }
   }
   
   http.end();
