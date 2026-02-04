@@ -45,6 +45,10 @@ MaszynaESP32/
 - **ESP32 DevKit** - urządzenie sprzętowe
 - **SQLite** - baza danych (instalowana automatycznie)
 
+### 🌐 Wdrożenie na VPS
+
+Jeśli chcesz wdrożyć projekt na serwerze VPS (np. Contabo), zobacz **[DEPLOYMENT.md](./DEPLOYMENT.md)** - szczegółowy przewodnik krok po kroku.
+
 ### 1. Backend
 
 ```bash
